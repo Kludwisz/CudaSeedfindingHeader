@@ -345,8 +345,8 @@ __host__ __device__ static inline int64_t floorDiv(int64_t x, int64_t y) {
 __host__ __device__ static inline void reverseNextLong(uint64_t nextLongLower48, uint64_t* seedList, int* seedCount) {
     *seedCount = 0;
 
-	int64_t lowerBits = nextLongValue & 0xffff'ffffULL;
-	int64_t upperBits = nextLongValue >> 32;
+	int64_t lowerBits = nextLongLower48 & 0xffff'ffffULL;
+	int64_t upperBits = nextLongLower48 >> 32;
 	//Did the lower bits affect the upper bits
 	if ((lowerBits & 0x80000000LL) != 0)
 		upperBits += 1; //restoring the initial value of the upper bits
@@ -401,6 +401,13 @@ __host__ __device__ static inline void getNextLongEquivalents(uint64_t nextLongL
 // --------------------------------------------------------------------------------
 
 // Minecraft-specific seeding utilities (Xoroshiro)
+
+__host__ __device__ static inline uint64_t xGetDecorationSeed(Xoroshiro* xrand, uint64_t worldseed, int x, int z) {
+    xSetSeed(xrand, worldseed);
+    uint64_t a = xNextLongJ(xrand) | 1;
+    uint64_t b = xNextLongJ(xrand) | 1;
+    return a*x + b*z ^ worldseed;
+}
 
 __host__ __device__ static inline void xSetDecorationSeed(Xoroshiro* xrand, uint64_t worldseed, int x, int z) {
     xSetSeed(xrand, xGetDecorationSeed(xrand, worldseed, x, z));

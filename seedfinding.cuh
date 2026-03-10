@@ -289,6 +289,8 @@ __host__ __device__ static inline int nextIntBoundedFastTemplate(uint64_t *seed)
 // Java Random N-state skip template
 
 constexpr uint64_t COMBINED_RANDOM(uint64_t skip_value, bool multiplier) {
+    skip_value &= MASK_48;
+
     uint64_t im = 1;
     uint64_t ia = 0;
     uint64_t mult = 1;
@@ -311,8 +313,8 @@ constexpr uint64_t COMBINED_RANDOM(uint64_t skip_value, bool multiplier) {
 }
 
 template <int64_t SKIP>
-__host__ __device__ static inline void lcgSkip(uint64_t* rand) {
-    (*rand) = ((*rand) * COMBINED_RANDOM(SKIP, true) + COMBINED_RANDOM(SKIP, false)) & MASK_48;
+__host__ __device__ static inline uint64_t javaLcgSkip(uint64_t rand) {
+    return (rand * COMBINED_RANDOM(SKIP, true) + COMBINED_RANDOM(SKIP, false)) & MASK_48;
 }
 
 // --------------------------------------------------------------------------------
@@ -398,6 +400,50 @@ __host__ __device__ static inline void getNextLongEquivalents(uint64_t nextLongL
 // End of mc_core_java library code
 // --------------------------------------------------------------------------------
 
-// TODO all of the MC-related seeding functions
+// Minecraft-specific seeding utilities (Xoroshiro)
+
+__host__ __device__ static inline void xSetDecorationSeed(Xoroshiro* xrand, uint64_t worldseed, int x, int z) {
+    xSetSeed(xrand, xGetDecorationSeed(xrand, worldseed, x, z));
+}
+
+__host__ __device__ static inline void xSetFeatureSeed(Xoroshiro* xrand, uint64_t worldseed, int x, int z, int salt) {
+    xSetSeed(xrand, xGetDecorationSeed(xrand, worldseed, x, z) + salt);
+}
+
+__host__ __device__ static inline void xSetFeatureSeed(Xoroshiro* xrand, uint64_t decorationSeed, int salt) {
+    xSetSeed(xrand, decorationSeed + salt);
+}
+
+// Minecraft-specific seeding utilities (Java Random)
+
+__host__ __device__ static inline uint64_t getDecorationSeed(uint64_t* rand, uint64_t structureSeed, int x, int z) {
+    setSeed(rand, structureSeed);
+    uint64_t a = nextLong(rand) | 1;
+    uint64_t b = nextLong(rand) | 1;
+    return (a*x + b*z ^ structureSeed) & MASK_48;
+}
+
+__host__ __device__ static inline void setDecorationSeed(uint64_t* rand, uint64_t structureSeed, int x, int z) {
+    setSeed(rand, getDecorationSeed(rand, structureSeed, x, z));
+}
+
+__host__ __device__ static inline void setFeatureSeed(uint64_t* rand, uint64_t structureSeed, int x, int z, int salt) {
+    setSeed(rand, getDecorationSeed(rand, structureSeed, x, z) + salt);
+}
+
+__host__ __device__ static inline void setFeatureSeed(uint64_t* rand, uint64_t decorationSeed, int salt) {
+    setSeed(rand, decorationSeed + salt);
+}
+
+__host__ __device__ static inline void setCarverSeed(uint64_t* rand, uint64_t structureSeed, int chunkX, int chunkZ) {
+    setSeed(rand, structureSeed);
+    uint64_t a = nextLong(rand);
+    uint64_t b = nextLong(rand);
+    setSeed(rand, a*chunkX ^ b*chunkZ ^ structureSeed);
+}
+
+__host__ __device__ static inline void setRegionSeed(uint64_t* rand, uint64_t structureSeed, int regionX, int regionZ, int structureSalt) {
+    setSeed(rand, structureSeed + structureSalt + regionX * REGION_SEED_A + regionZ * REGION_SEED_B);
+}
 
 #endif // SEEDFINDING_CUH

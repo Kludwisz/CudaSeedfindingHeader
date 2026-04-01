@@ -283,7 +283,7 @@ __host__ __device__ static inline int nextIntBoundedFastTemplate(uint64_t *seed)
     if (min == max) {
         return min;
     }
-    return min + nextIntTemplate<max - min + 1>(seed);
+    return min + nextIntFastTemplate<max - min + 1>(seed);
 }
 
 // Java Random N-state skip template

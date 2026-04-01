@@ -77,7 +77,7 @@ struct Timer {
 
     __host__ inline void update_completion(double new_work_done) {
         std::chrono::time_point<std::chrono::steady_clock> time_current = std::chrono::steady_clock::now();
-        double new_percent = std::round(full_work_size / new_work_done * 100.0 / percent_per_update) * percent_per_update;
+        double new_percent = std::round(new_work_done / full_work_size * 100.0 / percent_per_update) * percent_per_update;
 
         if (new_percent != current_percent) {
             current_percent = new_percent;

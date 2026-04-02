@@ -291,8 +291,8 @@ __host__ __device__ static inline int nextIntBoundedFastTemplate(uint64_t *seed)
 constexpr uint64_t COMBINED_RANDOM(uint64_t skip_value, bool multiplier) {
     skip_value &= MASK_48;
 
-    uint64_t im = 1;
-    uint64_t ia = 0;
+    uint64_t im = LCG_JAVA_MULTIPLIER;
+    uint64_t ia = LCG_JAVA_ADDEND;
     uint64_t mult = 1;
     uint64_t add = 0;
 
